@@ -1,0 +1,268 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+openapi: 3.0.1
+info:
+  title: Impersonation Service
+  description: Manage Impersonating Subjects
+  contact:
+    email: Tyler@service84.io
+  license:
+    name: The Apache License, Version 2.0
+  version: 1.0.0
+servers:
+- url: http://impersonation/
+- url: http://impersonation.service84/
+- url: https://impersonation.api.service84.io/
+- url: https://impersonation.api.dev.service84.io/
+- url: http://localhost:31205/
+paths:
+  /assumable_identities:
+    get:
+      summary: Retrieve a Page of Assumable Identities
+      tags:
+        - impersonation
+      security:
+        - BearerAuth: []
+      operationId: retrieve_assumable_identities
+      parameters:
+      - $ref: '#/components/parameters/Authentication'
+      - $ref: '#/components/parameters/PageIndex'
+      - $ref: '#/components/parameters/PageSize'
+      - $ref: '#/components/parameters/Subject'
+      - $ref: '#/components/parameters/Identity'
+      responses:
+        200:
+          $ref: '#/components/responses/AssumableIdentityPage'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        403:
+          $ref: '#/components/responses/InsufficientPermission'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /assumable_identities/assume_identity:
+    post:
+      summary: Assume an Identity
+      tags:
+        - impersonation
+      security:
+        - BearerAuth: []
+      operationId: assume_identity
+      requestBody:
+        $ref: '#/components/requestBodies/IdentityRequest'
+      parameters:
+      - $ref: '#/components/parameters/Authentication'
+      responses:
+        200:
+          $ref: '#/components/responses/AssumableIdentity'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        403:
+          $ref: '#/components/responses/InsufficientPermission'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /assumable_identities/grant:
+    post:
+      summary: Grant an Assumable Identity
+      tags:
+        - impersonation
+      security:
+        - BearerAuth: []
+      operationId: grant_assumable_identity
+      requestBody:
+        $ref: '#/components/requestBodies/AssumableIdentity'
+      parameters:
+      - $ref: '#/components/parameters/Authentication'
+      responses:
+        200:
+          $ref: '#/components/responses/AssumableIdentity'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        403:
+          $ref: '#/components/responses/InsufficientPermission'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /assumable_identities/revoke:
+    post:
+      summary: Revoke an Assumable Identity
+      tags:
+        - impersonation
+      security:
+        - BearerAuth: []
+      operationId: revoke_assumable_identity
+      requestBody:
+        $ref: '#/components/requestBodies/AssumableIdentity'
+      parameters:
+      - $ref: '#/components/parameters/Authentication'
+      responses:
+        204:
+          description: Assumable Identity Revoked
+        400:
+          $ref: '#/components/responses/BadRequest'
+        403:
+          $ref: '#/components/responses/InsufficientPermission'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+components:
+  schemas:
+    IdentityRequest:
+      type: object
+      properties:
+        identity:
+          type: string
+          format: uuid
+    AssumableIdentity:
+      type: object
+      properties:
+        subject:
+          type: string
+          format: uuid
+        identity:
+          type: string
+          format: uuid
+    PaginationData:
+      type: object
+      properties:
+        index:
+          type: string
+        next_index:
+          type: string
+        count:
+          type: integer
+        total:
+          type: integer
+    AssumableIdentityPage:
+      type: object
+      properties:
+        metadata:
+          $ref: '#/components/schemas/PaginationData'
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssumableIdentity'
+    Error:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+  requestBodies:
+    IdentityRequest:
+      description: A request to Assume an Identity
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/IdentityRequest'
+    AssumableIdentity:
+      description: An Assumable Identity
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AssumableIdentity'
+  responses:
+    AssumableIdentity:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AssumableIdentity'
+    AssumableIdentityPage:
+      description: Successful operation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AssumableIdentityPage'
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InsufficientPermission:
+      description: Insufficient Permission
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  parameters:
+    Authentication:
+      in: header
+      name: Authentication
+      description: The Authentication Header
+      required: false
+      schema:
+        type: string
+    Subject:
+      in: query
+      name: subject
+      description: Subject ID
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+          format: uuid
+    Identity:
+      in: query
+      name: identity
+      description: Identity ID
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+          format: uuid
+    PageIndex:
+      in: query
+      name: page_index
+      description: The index of the page to get
+      required: false
+      schema:
+        type: string
+    PageSize:
+      in: query
+      name: page_size
+      description: The size of the page to get
+      required: false
+      schema:
+        minimum: 1
+        type: integer
+        default: 20
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+tags:
+  - name: impersonation
+    description: Relates to Impersonation
