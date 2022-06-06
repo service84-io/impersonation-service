@@ -39,12 +39,12 @@ import io.service84.services.impersonation.persistence.repository.AssumableIdent
 
 @Service("FCD09D82-4BDB-47D4-B783-B034E3417CE4")
 public class ImpersonationService {
-  private static String AssumeIdentity = "impersonation:assume_identity";
-  private static String ImpersonateAnyOtherSubject = "impersonation:impersonate_any_other_subject";
-  private static String RetrieveAnyAssumableIdentity =
+  private static String AssumeIdentityScope = "impersonation:assume_identity";
+  private static String ImpersonateAnyOtherSubjectScope = "impersonation:impersonate_any_other_subject";
+  private static String RetrieveAnyAssumableIdentityScope =
       "impersonation:retrieve_any_assumable_identity";
-  private static String GrantAnyAssumableIdentity = "impersonation:grant_any_assumable_identity";
-  private static String RevokeAnyAssumableIdentity = "impersonation:revoke_any_assumable_identity";
+  private static String GrantAnyAssumableIdentityScope = "impersonation:grant_any_assumable_identity";
+  private static String RevokeAnyAssumableIdentityScope = "impersonation:revoke_any_assumable_identity";
 
   @Autowired private AssumableIdentityRepository repository;
   @Autowired private AuthenticationService authenticationService;
@@ -53,10 +53,10 @@ public class ImpersonationService {
     UUID subject = UUID.fromString(authenticationService.getSubject());
     List<String> subjectScopes = authenticationService.getScopes();
 
-    if (!subjectScopes.contains(AssumeIdentity)) {
+    if (!subjectScopes.contains(AssumeIdentityScope)) {
       throw new InsufficientPermission();
     }
-    if (subjectScopes.contains(ImpersonateAnyOtherSubject)) {
+    if (subjectScopes.contains(ImpersonateAnyOtherSubjectScope)) {
       return new AssumableIdentity(subject, identity);
     }
     return repository
@@ -68,7 +68,7 @@ public class ImpersonationService {
       throws InsufficientPermission {
     List<String> subjectScopes = authenticationService.getScopes();
 
-    if (subjectScopes.contains(GrantAnyAssumableIdentity)) {
+    if (subjectScopes.contains(GrantAnyAssumableIdentityScope)) {
       AssumableIdentity assumableIdentity = new AssumableIdentity(subject, identity);
       return repository.saveAndFlush(assumableIdentity);
     }
@@ -94,7 +94,7 @@ public class ImpersonationService {
       List<UUID> subjects, List<UUID> identities, Pageable pageable) throws InsufficientPermission {
     List<String> subjectScopes = authenticationService.getScopes();
 
-    if (subjectScopes.contains(RetrieveAnyAssumableIdentity)) {
+    if (subjectScopes.contains(RetrieveAnyAssumableIdentityScope)) {
       return repository.findAll(
           subjectSelector(subjects).and(identitySelector(identities)), pageable);
     }
@@ -105,7 +105,7 @@ public class ImpersonationService {
       throws InsufficientPermission, EntityNotFound {
     List<String> subjectScopes = authenticationService.getScopes();
 
-    if (!subjectScopes.contains(RevokeAnyAssumableIdentity)) {
+    if (!subjectScopes.contains(RevokeAnyAssumableIdentityScope)) {
       throw new InsufficientPermission();
     }
     AssumableIdentity assumableIdentity =
