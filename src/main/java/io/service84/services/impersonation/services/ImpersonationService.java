@@ -40,11 +40,14 @@ import io.service84.services.impersonation.persistence.repository.AssumableIdent
 @Service("FCD09D82-4BDB-47D4-B783-B034E3417CE4")
 public class ImpersonationService {
   private static String AssumeIdentityScope = "impersonation:assume_identity";
-  private static String ImpersonateAnyOtherSubjectScope = "impersonation:impersonate_any_other_subject";
+  private static String ImpersonateAnyOtherSubjectScope =
+      "impersonation:impersonate_any_other_subject";
   private static String RetrieveAnyAssumableIdentityScope =
       "impersonation:retrieve_any_assumable_identity";
-  private static String GrantAnyAssumableIdentityScope = "impersonation:grant_any_assumable_identity";
-  private static String RevokeAnyAssumableIdentityScope = "impersonation:revoke_any_assumable_identity";
+  private static String GrantAnyAssumableIdentityScope =
+      "impersonation:grant_any_assumable_identity";
+  private static String RevokeAnyAssumableIdentityScope =
+      "impersonation:revoke_any_assumable_identity";
 
   @Autowired private AssumableIdentityRepository repository;
   @Autowired private AuthenticationService authenticationService;
@@ -56,9 +59,11 @@ public class ImpersonationService {
     if (!subjectScopes.contains(AssumeIdentityScope)) {
       throw new InsufficientPermission();
     }
+
     if (subjectScopes.contains(ImpersonateAnyOtherSubjectScope)) {
       return new AssumableIdentity(subject, identity);
     }
+
     return repository
         .findBySubjectAndIdentity(subject, identity)
         .orElseThrow(InsufficientPermission.supplier());
@@ -72,6 +77,7 @@ public class ImpersonationService {
       AssumableIdentity assumableIdentity = new AssumableIdentity(subject, identity);
       return repository.saveAndFlush(assumableIdentity);
     }
+
     throw new InsufficientPermission();
   }
 
@@ -80,6 +86,7 @@ public class ImpersonationService {
     if (identities == null || identities.isEmpty()) {
       return simpleTrue();
     }
+
     return new Specification<>() {
       @Override
       public Predicate toPredicate(
@@ -98,6 +105,7 @@ public class ImpersonationService {
       return repository.findAll(
           subjectSelector(subjects).and(identitySelector(identities)), pageable);
     }
+
     throw new InsufficientPermission();
   }
 
@@ -108,6 +116,7 @@ public class ImpersonationService {
     if (!subjectScopes.contains(RevokeAnyAssumableIdentityScope)) {
       throw new InsufficientPermission();
     }
+
     AssumableIdentity assumableIdentity =
         repository
             .findBySubjectAndIdentity(subject, identity)
@@ -120,6 +129,7 @@ public class ImpersonationService {
     if (subjects == null || subjects.isEmpty()) {
       return simpleTrue();
     }
+
     return new Specification<>() {
       @Override
       public Predicate toPredicate(
